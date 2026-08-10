@@ -8,11 +8,7 @@ from .indesign.exporter import InDesignExporter
 
 
 class ConversionPipeline:
-    """Top-level orchestration boundary.
-
-    Phase 1 implements only the INDD -> IDML -> validated/extracted IDML
-    boundary. DOCX rendering is deliberately not coupled to this stage.
-    """
+    """Top-level orchestration boundary for the conversion stages."""
 
     def convert(self, input_path: Path, output_path: Path):
         input_path = Path(input_path).resolve()
@@ -29,13 +25,14 @@ class ConversionPipeline:
 
         with tempfile.TemporaryDirectory(prefix="indd2docx-") as temp_dir:
             package = IDMLPackage(idml_path, Path(temp_dir))
-            package.validate()
-            extracted_root = package.extract()
+            members = package.validate()
+            package.extract()
 
-        # Phase 2 will parse extracted_root into the independent DocumentModel.
-        # Do not manufacture a DOCX here: each pipeline boundary is tested first.
+        # Phase 2 will parse the extracted package into the independent
+        # DocumentModel. No DOCX is manufactured at this boundary.
         return {
             "idml": idml_path,
-            "extracted": extracted_root,
+            "validated": True,
+            "member_count": len(members),
             "docx": output_path,
         }
