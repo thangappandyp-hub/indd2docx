@@ -1,0 +1,1 @@
+"""Independent internal document model."""
